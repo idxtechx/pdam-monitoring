@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Activity, MapPin, AlertTriangle, Droplet, Compass, Clock } from 'lucide-react';
+import { LineChart, Line, XAxis as BXAxis, YAxis as BYAxis, CartesianGrid as BCartesianGrid, Tooltip as BTooltip, ResponsiveContainer as BResponsiveContainer } from 'recharts';
 import MapComponent from '../components/MapComponent';
 import ChartComponent from '../components/ChartComponent';
 
@@ -339,6 +340,67 @@ const PublicDashboard = () => {
             </>
           )}
         </div>
+      </div>
+
+      {/* Grafik Perbandingan Tekanan Air Rumah (Selalu Terlihat di Dashboard) */}
+      <div className="admin-card" style={{ marginTop: '2rem' }}>
+        <div className="admin-card-header" style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+          <h3 className="section-title">
+            <Activity size={18} color="var(--primary)" />
+            Grafik Perbandingan Tekanan Air Realtime (Semua Rumah)
+          </h3>
+        </div>
+        
+        {locations.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            Menunggu data rumah dari database...
+          </div>
+        ) : (
+          <div style={{ width: '100%', height: '300px' }}>
+            <BResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={locations.map(loc => ({
+                  name: loc.name.split(' - ')[0], // Ambil nama pemilik saja
+                  pressure: loc.latest_pressure_bar !== null ? parseFloat(loc.latest_pressure_bar) : 0,
+                  device: loc.esp32_device_id
+                }))}
+                margin={{ top: 15, right: 30, left: -20, bottom: 5 }}
+              >
+                <BCartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
+                <BXAxis 
+                  dataKey="name" 
+                  tick={{ fill: 'var(--text-muted)', fontSize: 11, fontWeight: 600 }}
+                  tickLine={false}
+                />
+                <BYAxis 
+                  domain={[0, 5]}
+                  tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <BTooltip 
+                  formatter={(value) => [`${value.toFixed(2)} Bar`, 'Tekanan Saat Ini']}
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontFamily: 'var(--font-family)',
+                    fontSize: '0.8rem',
+                    boxShadow: 'var(--shadow-md)'
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="pressure" 
+                  stroke="var(--primary)" 
+                  strokeWidth={3} 
+                  activeDot={{ r: 8 }}
+                  dot={{ stroke: 'var(--primary)', strokeWidth: 2, r: 4, fill: 'white' }}
+                />
+              </LineChart>
+            </BResponsiveContainer>
+          </div>
+        )}
       </div>
     </div>
   );
